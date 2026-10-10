@@ -10,7 +10,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import numpy as np
 
-from maize_gradcam import DEFAULT_MODEL_PATH, EXPECTED_MAIZE_CLASSES, gradcam_heatmap, load_model_from_checkpoint
+from maize_gradcam import (
+    DEFAULT_MODEL_PATH,
+    EXPECTED_MAIZE_CLASSES,
+    gradcam_heatmap,
+    load_model_from_checkpoint,
+)
 
 app = FastAPI(title="AgriSense AI Maize Backend")
 app.add_middleware(

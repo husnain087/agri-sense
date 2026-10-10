@@ -11,7 +11,11 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, UnidentifiedImageError
 
-from wheat_gradcam import CLASS_NAMES, load_wheat_model, predict_with_gradcam
+from backend.wheat_gradcam import (
+    CLASS_NAMES,
+    load_wheat_model,
+    predict_with_gradcam,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CHECKPOINT_PATH = Path(
@@ -21,6 +25,15 @@ CHECKPOINT_PATH = Path(
     )
 ).expanduser().resolve()
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+FRONTEND_ORIGIN = os.environ.get("AGRI_FRONTEND_ORIGIN", "").strip()
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+if FRONTEND_ORIGIN:
+    ALLOWED_ORIGINS.append(FRONTEND_ORIGIN)
 
 
 @asynccontextmanager
@@ -35,12 +48,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="AgriSense AI Local Wheat Model", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
