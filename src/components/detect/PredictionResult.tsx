@@ -20,15 +20,18 @@ export function PredictionResult({ result, previewUrl, file, onScanAnother }: Pr
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
-  const info = getDiseaseInfo(result.predictedClass);
+  const info =
+    result.crop === "wheat" ? getDiseaseInfo(result.predictedClass) : null;
   const heatmapDataUrl =
-    result.heatmapBase64 && result.heatmapFormat
+    result.heatmap ??
+    (result.heatmapBase64 && result.heatmapFormat
       ? `data:${result.heatmapFormat};base64,${result.heatmapBase64}`
-      : null;
+      : null);
   const overlayDataUrl =
-    result.overlayBase64 && result.heatmapFormat
+    result.overlay ??
+    (result.overlayBase64 && result.heatmapFormat
       ? `data:${result.heatmapFormat};base64,${result.overlayBase64}`
-      : null;
+      : null);
   const predictionTimestamp = result.timestamp
     ? new Date(result.timestamp).toLocaleString()
     : null;
@@ -64,16 +67,20 @@ export function PredictionResult({ result, previewUrl, file, onScanAnother }: Pr
         <h2>Prediction result</h2>
         {previewUrl ? (
           <div className="preview-frame">
-            <img src={previewUrl} alt="Uploaded wheat leaf" />
+            <img src={previewUrl} alt={`Uploaded ${result.crop} leaf`} />
           </div>
         ) : null}
-        <p className="kicker">{info ? info.statusTone : "unknown class"}</p>
+        <p className="kicker">
+          {result.crop === "maize" ? "maize model" : info ? info.statusTone : "unknown class"}
+        </p>
         <h3>{displayClassLabel(result.predictedClass)}</h3>
         <p>
           Model confidence: <strong>{formatPercent(result.confidencePercent)}</strong>
           {" "}({formatConfidenceScore(result.confidence)} raw score)
         </p>
-        {info ? <p>{info.shortSummary}</p> : (
+        {info ? <p>{info.shortSummary}</p> : result.crop === "maize" ? (
+          <p>The selected maize model produced this crop-specific class prediction.</p>
+        ) : (
           <p>
             This label is not one of the three reviewed classes. The available
             backend values are shown, but class-specific advice is withheld.
@@ -82,9 +89,8 @@ export function PredictionResult({ result, previewUrl, file, onScanAnother }: Pr
         {result.explanation ? <p className="muted">{result.explanation}</p> : null}
         {!result.explanation ? (
           <p className="muted">
-            Grad-CAM highlights the image regions that most influenced the model’s
-            decision. It is a visual explanation, not proof of disease presence or
-            exact lesion location on the whole field.
+            Any heatmap returned by the API is a visual explanation, not proof of
+            disease presence or exact lesion location on the whole field.
           </p>
         ) : null}
         {heatmapDataUrl ? (
@@ -93,13 +99,13 @@ export function PredictionResult({ result, previewUrl, file, onScanAnother }: Pr
             <div className="preview-frame">
               <img
                 src={heatmapDataUrl}
-                alt="Grad-CAM heatmap returned by the wheat prediction backend"
+                alt={`Grad-CAM heatmap returned by the ${result.crop} prediction backend`}
               />
             </div>
           </div>
         ) : (
           <p className="notice">
-            The backend did not return a Grad-CAM heatmap for this prediction.
+            The API did not return a heatmap for this prediction.
           </p>
         )}
         {overlayDataUrl ? (
@@ -108,7 +114,7 @@ export function PredictionResult({ result, previewUrl, file, onScanAnother }: Pr
             <div className="preview-frame">
               <img
                 src={overlayDataUrl}
-                alt="Grad-CAM heatmap overlaid on the uploaded wheat image"
+                alt={`Grad-CAM heatmap overlaid on the uploaded ${result.crop} image`}
               />
             </div>
           </div>
@@ -137,8 +143,8 @@ export function PredictionResult({ result, previewUrl, file, onScanAnother }: Pr
           ) : null}
         </div>
         {!configured ? (
-          <p className="notice">
-            History saving needs Supabase. Detection still used the live model.
+            <p className="notice">
+            History saving needs Supabase. Detection used the configured API.
           </p>
         ) : null}
         {configured && !user ? (
@@ -147,7 +153,7 @@ export function PredictionResult({ result, previewUrl, file, onScanAnother }: Pr
         {saveMessage ? <p className="success">{saveMessage}</p> : null}
         {saveError ? <p className="alert">{saveError}</p> : null}
       </section>
-      <AdvisoryPanel predictedClass={result.predictedClass} />
+      <AdvisoryPanel predictedClass={result.predictedClass} crop={result.crop} />
     </div>
   );
 }

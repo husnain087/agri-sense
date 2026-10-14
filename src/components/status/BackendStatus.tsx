@@ -3,10 +3,14 @@ import type { HealthInfo } from "../../types/prediction";
 export function BackendStatus({ health }: { health: HealthInfo }) {
   const label =
     health.status === "online"
-      ? "Backend online"
-      : health.status === "offline"
-        ? "Backend unavailable"
-        : "Checking backend";
+      ? "API online"
+      : health.status === "degraded"
+        ? "Some APIs unavailable"
+        : health.status === "offline"
+            ? "API unavailable"
+            : health.status === "not-configured"
+              ? "API not configured"
+              : "Checking API";
 
   return (
     <span

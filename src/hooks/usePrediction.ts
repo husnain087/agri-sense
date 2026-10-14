@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { predictLeafImage, validateImageFile } from "../services/api";
-import type { PredictionResult } from "../types/prediction";
+import type { Crop, PredictionResult } from "../types/prediction";
 
 export function usePrediction() {
   const [file, setFile] = useState<File | null>(null);
@@ -29,8 +29,11 @@ export function usePrediction() {
 
   const selectFile = useCallback(
     (next: File | null) => {
+      abortRef.current?.abort();
+      abortRef.current = null;
       setResult(null);
       setError(null);
+      setLoading(false);
       if (!next) {
         setFile(null);
         clearPreview();
@@ -50,10 +53,12 @@ export function usePrediction() {
     [clearPreview],
   );
 
-  const runPrediction = useCallback(async () => {
+  const runPrediction = useCallback(async (
+    onCropIdentified?: (crop: Crop, confidence: number) => void,
+  ) => {
     if (!file) {
-      setError("Choose a wheat-leaf image before running detection.");
-      return;
+      setError("Choose a wheat or maize leaf image before running detection.");
+      return null;
     }
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -61,14 +66,20 @@ export function usePrediction() {
     setLoading(true);
     setError(null);
     setResult(null);
-    const outcome = await predictLeafImage(file, controller.signal);
-    if (controller.signal.aborted) return;
+    const outcome = await predictLeafImage(
+      file,
+      "auto",
+      controller.signal,
+      onCropIdentified,
+    );
+    if (controller.signal.aborted) return null;
     setLoading(false);
     if (!outcome.ok) {
       setError(outcome.message);
-      return;
+      return outcome;
     }
     setResult(outcome.result);
+    return outcome;
   }, [file]);
 
   const cancel = useCallback(() => {

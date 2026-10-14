@@ -36,7 +36,7 @@ export function ImageDropzone({ file, previewUrl, disabled, onFile }: Props) {
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
       >
-        <strong>Drop a wheat-leaf image here</strong>
+        <strong>Drop a wheat or maize leaf image here</strong>
         <p>
           or choose a JPEG, PNG, or WEBP file up to {FILE_LIMITS.maxBytes / (1024 * 1024)} MB.
         </p>

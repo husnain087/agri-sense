@@ -7,8 +7,8 @@ export function Footer() {
         <div>
           <h3>AgriSense AI</h3>
           <p>
-            Wheat-leaf image classification for three classes: Healthy, Septoria,
-            and stripe rust. Advisory text is general information, not a field
+            Automatic wheat and maize identification with crop-specific disease
+            classification. Advisory text is general information, not a field
             diagnosis.
           </p>
         </div>

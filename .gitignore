@@ -30,3 +30,8 @@ dist-ssr
 
 # Probe artifacts
 probe.png
+
+# Removed local model artifacts
+*.pth
+__pycache__/
+*.py[cod]

@@ -17,7 +17,7 @@ export function SignupPage() {
       <div className="container">
         <div className="card auth-card">
           <h1>Accounts are not configured</h1>
-          <p>Detection still works against the live FastAPI model.</p>
+          <p>Disease detection becomes available when its API endpoint is configured.</p>
         </div>
       </div>
     );

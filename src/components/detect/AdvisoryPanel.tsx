@@ -1,6 +1,26 @@
 import { getDiseaseInfo, displayClassLabel } from "../../data/diseaseInfo";
+import type { Crop } from "../../types/prediction";
 
-export function AdvisoryPanel({ predictedClass }: { predictedClass: string }) {
+export function AdvisoryPanel({
+  predictedClass,
+  crop = "wheat",
+}: {
+  predictedClass: string;
+  crop?: Crop;
+}) {
+  if (crop === "maize") {
+    return (
+      <section className="card limitations">
+        <h3>Agricultural advisory</h3>
+        <p>
+          The maize model returned <strong>{displayClassLabel(predictedClass)}</strong>.
+          This result is a model prediction, not a confirmed diagnosis or treatment
+          prescription.
+        </p>
+      </section>
+    );
+  }
+
   const info = getDiseaseInfo(predictedClass);
 
   if (!info) {

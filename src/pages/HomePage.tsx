@@ -1,18 +1,16 @@
 import { Link } from "react-router-dom";
 import { DISEASE_INFO } from "../data/diseaseInfo";
-import { API_BASE_URL } from "../lib/env";
 
 export function HomePage() {
   return (
     <div className="container">
       <section className="hero">
         <div>
-          <span className="kicker">Wheat leaf intelligence</span>
-          <h1>AI-powered detection for three wheat-leaf classes.</h1>
+          <span className="kicker">Wheat + maize leaf intelligence</span>
+          <h1>Upload a leaf photo. Automatically detect its crop and disease.</h1>
           <p>
-            AgriSense AI sends a leaf photo to the local FastAPI service running
-            your EfficientNet-B0 checkpoint. The model distinguishes Healthy,
-            Septoria, and stripe rust — not every crop or every plant disease.
+            AgriSense AI first identifies wheat or maize, then runs the matching
+            disease API and displays its response and any visual explanation it returns.
           </p>
           <div className="hero-actions">
             <Link className="btn btn-primary" to="/detect">
@@ -35,14 +33,14 @@ export function HomePage() {
             </svg>
           </div>
           <p className="muted">
-            Local model API: <code>{API_BASE_URL}</code>
+            Crop identification routes each image to the matching deployed disease API.
           </p>
         </div>
       </section>
 
       <section className="section" id="classes">
         <h2>Supported classes</h2>
-        <p>The trained classifier currently outputs exactly these three labels.</p>
+        <p>The disease classes shown here are available for wheat; maize has its own model classes.</p>
         <div className="grid-3">
           {Object.values(DISEASE_INFO).map((item) => (
             <article className="card" key={item.id}>
@@ -58,13 +56,13 @@ export function HomePage() {
         <div className="grid-3">
           <article className="card">
             <h3>1. Upload a leaf photo</h3>
-            <p>Use a clear JPEG, PNG, or WEBP image focused on a wheat leaf.</p>
+            <p>Use a clear JPEG, PNG, or WEBP image focused on a wheat or maize leaf.</p>
           </article>
           <article className="card">
             <h3>2. The model scores the image</h3>
             <p>
-              FastAPI runs EfficientNet-B0 and returns a class, confidence, and
-              class probabilities.
+              The crop identifier and disease APIs return the available class,
+              confidence, probability, and visual explanation data.
             </p>
           </article>
           <article className="card">
@@ -81,12 +79,12 @@ export function HomePage() {
         <h2>Platform features</h2>
         <div className="grid-2">
           <article className="card">
-            <h3>Local model inference</h3>
-            <p>Predictions come from your local PyTorch checkpoint, not from mock data.</p>
+            <h3>External model APIs</h3>
+            <p>Predictions and heatmaps are shown only when returned by the selected API.</p>
           </article>
           <article className="card">
             <h3>Probability visualization</h3>
-            <p>See the model’s scores for Healthy, Septoria, and stripe rust together.</p>
+            <p>            See the detected crop’s disease scores together.</p>
           </article>
           <article className="card">
             <h3>Signed-in history</h3>
@@ -95,8 +93,7 @@ export function HomePage() {
           <article className="card">
             <h3>Maize detection module</h3>
             <p>
-              The maize interface connects to the local FastAPI service and shows a
-              clear status when the project checkpoint does not yet match a valid maize model.
+              Maize images are automatically routed to the maize disease API.
             </p>
           </article>
         </div>
@@ -106,19 +103,18 @@ export function HomePage() {
         <article className="card limitations">
           <h2>Capabilities and limits</h2>
           <p>
-            The current model is a wheat-leaf classifier trained to separate
-            Healthy, Septoria, and stripe rust. It does not support other crops,
-            other wheat diseases, canopy-level mapping, infected-area percentages,
-            or automatic pesticide prescriptions. Confidence is a model score, not
-            a guarantee.
+            The crop identifier supports wheat and maize; other crops are rejected.
+            Disease classes depend on the selected crop model. The system does not
+            provide canopy-level mapping, infected-area percentages, or automatic
+            pesticide prescriptions. Confidence is a model score, not a guarantee.
           </p>
         </article>
       </section>
 
       <section className="section">
         <article className="card">
-          <h2>Inspect a wheat leaf next</h2>
-          <p>Upload an image and request a prediction from your local model backend.</p>
+          <h2>Inspect a crop leaf next</h2>
+          <p>Upload an image and let crop identification select its disease API.</p>
           <div className="hero-actions">
             <Link className="btn btn-primary" to="/detect">
               Start detection

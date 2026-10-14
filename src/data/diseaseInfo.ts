@@ -12,7 +12,7 @@ export interface DiseaseInfo {
   statusTone: "healthy" | "caution" | "alert";
 }
 
-export const DISEASE_INFO: Record<KnownClass, DiseaseInfo> = {
+export const DISEASE_INFO: Partial<Record<KnownClass, DiseaseInfo>> = {
   Healthy: {
     id: "Healthy",
     label: "Healthy",
@@ -90,10 +90,7 @@ export const DISEASE_INFO: Record<KnownClass, DiseaseInfo> = {
 };
 
 export function getDiseaseInfo(predictedClass: string): DiseaseInfo | null {
-  if (predictedClass in DISEASE_INFO) {
-    return DISEASE_INFO[predictedClass as KnownClass];
-  }
-  return null;
+  return DISEASE_INFO[predictedClass as KnownClass] ?? null;
 }
 
 export function displayClassLabel(predictedClass: string): string {

@@ -1,14 +1,13 @@
 import { useCallback, useState } from "react";
 import { ProbabilityChart } from "../components/detect/ProbabilityChart";
 import { formatConfidenceScore, formatPercent } from "../lib/format";
-import { MAIZE_API_BASE_URL } from "../lib/env";
-import { predictMaizeImage, validateMaizeImageFile } from "../services/maizeApi";
-import type { MaizePredictionResult } from "../services/maizeApi";
+import { predictLeafImage, validateImageFile } from "../services/api";
+import type { PredictionResult } from "../types/prediction";
 
 export function MaizeDetectPage() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [result, setResult] = useState<MaizePredictionResult | null>(null);
+  const [result, setResult] = useState<PredictionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -36,7 +35,7 @@ export function MaizeDetectPage() {
         clearPreview();
         return;
       }
-      const invalid = validateMaizeImageFile(next);
+      const invalid = validateImageFile(next);
       if (invalid) {
         setFile(null);
         clearPreview();
@@ -60,7 +59,7 @@ export function MaizeDetectPage() {
     setError(null);
     setResult(null);
 
-    const outcome = await predictMaizeImage(file);
+    const outcome = await predictLeafImage(file, "maize");
     setLoading(false);
 
     if (!outcome.ok) {
@@ -71,22 +70,20 @@ export function MaizeDetectPage() {
     setResult(outcome.result);
   }, [file]);
 
-  const heatmapDataUrl =
-    result?.heatmapBase64 && result?.heatmapFormat
+  const heatmapDataUrl = result?.heatmap ??
+    (result?.heatmapBase64 && result.heatmapFormat
       ? `data:${result.heatmapFormat};base64,${result.heatmapBase64}`
-      : null;
-  const overlayDataUrl =
-    result?.overlayBase64 && result?.heatmapFormat
+      : null);
+  const overlayDataUrl = result?.overlay ??
+    (result?.overlayBase64 && result.heatmapFormat
       ? `data:${result.heatmapFormat};base64,${result.overlayBase64}`
-      : null;
+      : null);
 
   return (
     <div className="container">
-      <h1>Maize disease detection</h1>
+      <h1>Automatic disease detection</h1>
       <p>
-        This interface calls the local FastAPI backend at <code>{MAIZE_API_BASE_URL}</code>.
-        It is intentionally strict: if the saved checkpoint is not a maize model, the app stops with
-        a clear mismatch message instead of returning fake results.
+        Upload a leaf image to identify its crop and automatically use the matching disease API.
       </p>
 
       {result ? (
@@ -105,15 +102,15 @@ export function MaizeDetectPage() {
               {" "}({formatConfidenceScore(result.confidence)} raw score)
             </p>
             <p className="muted">
-              Grad-CAM highlights the regions most associated with the model’s prediction. It is a visual
-              explanation and not proof of disease presence across the whole field.
+              Any heatmap returned by the {result.crop} API is a visual explanation, not proof
+              of disease presence across the whole field.
             </p>
 
             {heatmapDataUrl ? (
               <div style={{ marginTop: 16 }}>
                 <h4>Grad-CAM heatmap</h4>
                 <div className="preview-frame">
-                  <img src={heatmapDataUrl} alt="Grad-CAM map for maize prediction" />
+                  <img src={heatmapDataUrl} alt={`Grad-CAM map for ${result.crop} prediction`} />
                 </div>
               </div>
             ) : null}
@@ -122,13 +119,13 @@ export function MaizeDetectPage() {
               <div style={{ marginTop: 16 }}>
                 <h4>Overlay</h4>
                 <div className="preview-frame">
-                  <img src={overlayDataUrl} alt="Heatmap overlay on original maize image" />
+                  <img src={overlayDataUrl} alt={`Heatmap overlay on original ${result.crop} image`} />
                 </div>
               </div>
             ) : null}
 
-            {result.predictionTimestamp ? (
-              <p className="muted">Prediction timestamp: {result.predictionTimestamp}</p>
+            {result.timestamp ? (
+              <p className="muted">Prediction timestamp: {result.timestamp}</p>
             ) : null}
 
             <ProbabilityChart
@@ -149,12 +146,12 @@ export function MaizeDetectPage() {
             htmlFor="maize-image-upload"
             style={{ display: "block", cursor: "pointer" }}
           >
-            <strong>Drop a maize leaf image here</strong>
-            <p>or choose a JPG, JPEG, or PNG file to test the local maize model.</p>
+            <strong>Drop a leaf image here</strong>
+            <p>or choose a JPG, JPEG, PNG, or WEBP file for automatic crop and disease detection.</p>
             <input
               id="maize-image-upload"
               type="file"
-              accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
               hidden
               onChange={(event) => {
                 const next = event.target.files?.[0] ?? null;
@@ -172,18 +169,16 @@ export function MaizeDetectPage() {
 
           {file ? <p className="muted">{file.name}</p> : null}
           {error ? <p className="alert" role="alert">{error}</p> : null}
-          {loading ? <p className="notice">Running the maize model and Grad-CAM on the local backend…</p> : null}
+          {loading ? <p className="notice">Identifying the crop and routing to its disease API…</p> : null}
 
           <div className="hero-actions">
             <button
               className="btn btn-primary"
               type="button"
-              onClick={() => {
-                void runPrediction();
-              }}
+              onClick={() => { void runPrediction(); }}
               disabled={!file || loading}
             >
-              {loading ? "Predicting…" : "Predict maize disease"}
+              {loading ? "Analyzing…" : error ? "Retry detection" : "Start detection"}
             </button>
             <button className="btn btn-ghost" type="button" onClick={reset}>
               Reset
